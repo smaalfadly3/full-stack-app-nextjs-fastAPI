@@ -2,8 +2,8 @@ from pydantic import BaseModel
 from typing import Optional
 from fastapi import APIRouter, status
 
-from api.models import Workout
-from api.deps import db_dependency, user_dependency
+from models import Workout
+from deps import db_dependency, user_dependency
 
 # Create a new FastAPI router for workout-related endpoints
 router = APIRouter(
