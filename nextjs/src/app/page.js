@@ -1,4 +1,4 @@
-"use client";
+"use client"; // This ensures the file is treated as a client-side component.
 
 import { useContext, useState, useEffect } from 'react';
 import AuthContext from './context/AuthContext';
@@ -6,68 +6,75 @@ import ProtectedRoute from './components/ProtectedRoute';
 import axios from 'axios';
 
 const Home = () => {
-  const { user, logout } = useContext(AuthContext);
-  const [workouts, setWorkouts] = useState([]);
-  const [routines, setRoutines] = useState([]);
-  const [workoutName, setWorkoutName] = useState('');
-  const [workoutDescription, setWorkoutDescription] = useState('');
-  const [routineName, setRoutineName] = useState('');
-  const [routineDescription, setRoutineDescription] = useState('');
-  const [selectedWorkouts, setSelectedWorkouts] = useState([]);
-
-  const token = localStorage.getItem('token');
+  const { user, logout } = useContext(AuthContext); // Access user and logout function from AuthContext.
+  const [workouts, setWorkouts] = useState([]); // State for storing workouts.
+  const [routines, setRoutines] = useState([]); // State for storing routines.
+  const [workoutName, setWorkoutName] = useState(''); // State for workout name input.
+  const [workoutDescription, setWorkoutDescription] = useState(''); // State for workout description input.
+  const [routineName, setRoutineName] = useState(''); // State for routine name input.
+  const [routineDescription, setRoutineDescription] = useState(''); // State for routine description input.
+  const [selectedWorkouts, setSelectedWorkouts] = useState([]); // State for selected workouts.
+  const [token, setToken] = useState(null); // State to store the token.
 
   useEffect(() => {
-    const fetchWorkoutsAndRoutines = async () => {
-      try {
-        const token = localStorage.getItem('token'); 
-        const [workoutsResponse, routinesResponse] = await Promise.all([
-          axios.get('http://localhost:8000/workouts/workouts', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get('http://localhost:8000/routines', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
+    // This effect will only run on the client side.
+    const storedToken = localStorage.getItem('token'); // Retrieve the token from localStorage.
+    setToken(storedToken); // Set the token in state.
+  }, []); // Empty dependency array ensures this effect runs only once after the component mounts.
 
-        setWorkouts(workoutsResponse.data);
-        setRoutines(routinesResponse.data);
-      } catch (error) {
-        console.error('Failed to fetch data:', error);
-      }
-    };
+  useEffect(() => {
+    if (token) {
+      // Fetch workouts and routines only if the token is available.
+      const fetchWorkoutsAndRoutines = async () => {
+        try {
+          const [workoutsResponse, routinesResponse] = await Promise.all([
+            axios.get('http://localhost:8000/workouts/workouts', {
+              headers: { Authorization: `Bearer ${token}` }, // Pass the token in the Authorization header.
+            }),
+            axios.get('http://localhost:8000/routines', {
+              headers: { Authorization: `Bearer ${token}` }, // Pass the token in the Authorization header.
+            }),
+          ]);
 
-    fetchWorkoutsAndRoutines();
-  }, []);
+          setWorkouts(workoutsResponse.data); // Set the retrieved workouts.
+          setRoutines(routinesResponse.data); // Set the retrieved routines.
+        } catch (error) {
+          console.error('Failed to fetch data:', error); // Handle errors.
+        }
+      };
+
+      fetchWorkoutsAndRoutines(); // Call the function to fetch data.
+    }
+  }, [token]); // Re-run this effect when the token changes.
 
   const handleCreateWorkout = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent form submission from reloading the page.
     try {
       const response = await axios.post('http://localhost:8000/workouts', {
         name: workoutName,
         description: workoutDescription,
       });
-      setWorkouts([...workouts, response.data]);
-      setWorkoutName('');
-      setWorkoutDescription('');
+      setWorkouts([...workouts, response.data]); // Add the new workout to the existing list.
+      setWorkoutName(''); // Reset the workout name input.
+      setWorkoutDescription(''); // Reset the workout description input.
     } catch (error) {
-      console.error('Failed to create workout:', error);
+      console.error('Failed to create workout:', error); // Handle errors.
     }
   };
 
   const handleCreateRoutine = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent form submission from reloading the page.
     try {
       const response = await axios.post('http://localhost:8000/routines', {
         name: routineName,
         description: routineDescription,
         workouts: selectedWorkouts,
       });
-      setRoutineName('');
-      setRoutineDescription('');
-      setSelectedWorkouts([]);
+      setRoutineName(''); // Reset the routine name input.
+      setRoutineDescription(''); // Reset the routine description input.
+      setSelectedWorkouts([]); // Clear the selected workouts.
     } catch (error) {
-      console.error('Failed to create routine:', error);
+      console.error('Failed to create routine:', error); // Handle errors.
     }
   };
 
@@ -77,7 +84,9 @@ const Home = () => {
         <h1>Welcome!</h1>
         <button onClick={logout} className="btn btn-danger">Logout</button>
 
+        {/* Forms for creating workouts and routines */}
         <div className="accordion mt-5 mb-5" id="accordionExample">
+          {/* Create Workout */}
           <div className="accordion-item">
             <h2 className="accordion-header" id="headingOne">
               <button className="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
@@ -114,6 +123,8 @@ const Home = () => {
               </div>
             </div>
           </div>
+
+          {/* Create Routine */}
           <div className="accordion-item">
             <h2 className="accordion-header" id="headingTwo">
               <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
@@ -168,27 +179,25 @@ const Home = () => {
           </div>
         </div>
 
+        {/* Displaying Routines */}
         <div>
           <h3>Your routines:</h3>
-          
           <ul>
-          {routines.map(routine => (
+            {routines.map(routine => (
               <div className="card" key={routine.id}>
                 <div className="card-body">
-                <h5 className="card-title">{routine.name}</h5>
-                <p className="card-text">{routine.description}</p>
-                <ul className="card-text"> 
-                  {routine.workouts && routine.workouts.map(workout => (
-                    <li key={workout.id}>
-                      {workout.name}: {workout.description}
-                    </li>
-                  ))}
-                </ul>
-                
+                  <h5 className="card-title">{routine.name}</h5>
+                  <p className="card-text">{routine.description}</p>
+                  <ul className="card-text"> 
+                    {routine.workouts && routine.workouts.map(workout => (
+                      <li key={workout.id}>
+                        {workout.name}: {workout.description}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             ))}
-
           </ul>
         </div>
       </div>
