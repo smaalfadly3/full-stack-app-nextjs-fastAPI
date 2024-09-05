@@ -71,9 +71,9 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={{ user, login, logout}}>
-            /* Provide the `user`, `login`, and `logout` values to all components inside `AuthProvider` */
+            {/* Provide the `user`, `login`, and `logout` values to all components inside `AuthProvider` */}
             {children}
-            /* Render any child components that `AuthProvider` wraps */
+            {/* Render any child components that `AuthProvider` wraps */}
 
         </AuthContext.Provider>
     );
